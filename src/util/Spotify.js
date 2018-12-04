@@ -27,11 +27,12 @@ const Spotify = {
           console.log(`accessToken: ${accessToken}`);
           console.log(`expires_in: ${expires_in}`); 
           // timer to clear access token 
-          this.setTimeout(() => {
-            console.log('I do not leak!');
-          }, expires_in);
-          accessToken = '';
-          expires_in = '';
+          // this.setTimeout(() => {
+          //   console.log('I clean');
+          //   accessToken = '';
+          //   expires_in = '';
+          //   window.location.href=redirect_uri;
+          // }, expires_in);
           return accessToken;
           
         }
@@ -43,7 +44,6 @@ const Spotify = {
 
 
   search(term){
-      console.log(`search${term}`);
       fetch(`https://api.spotify.com/v1/search?type=track&q=${term}`, {
         headers: {
           Authorization: `Bearer ${this.getAccessToken()}`
@@ -51,8 +51,7 @@ const Spotify = {
       }).then(response => {
         return response.json();
       }).then(jsonResponse => {
-        if (jsonResponse.tracks) {
-          console.log(`sonResponse.items: ${JSON.stringify(jsonResponse.tracks.items)}`);
+        if (jsonResponse.tracks.items) {
           jsonResponse.tracks.items.map(track => (console.log('eeeee'+ JSON.stringify(track.name))));
           return jsonResponse.tracks.items.map(track => ({
             id: track.id,
@@ -61,9 +60,7 @@ const Spotify = {
             album: track.album.name,
             uri: track.uri
           }));
-        } else {
-          return [];
-        }
+        } 
       });
   },
 
