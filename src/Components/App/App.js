@@ -26,8 +26,6 @@ class App extends Component {
     Spotify.search(term).then(list => {
       this.setState({searchResults: list});
     });
-    
-    // this.setState.searchResults.map(tr => {console.log(JSON.stringify(tr))});
   }
 
   handlePlayListNameChange(event) {
@@ -45,23 +43,22 @@ class App extends Component {
   }
 
   removeTrack(track) {
-    console.log(`playListTracks:${this.state.playListTracks.length}`);
       this.setState({
         playListTracks: this.state.playListTracks.filter(savedTrack => savedTrack.id !== track.id)
       });
   }
 
   savePlaylist() {
-    console.log(`playListTracks:${this.state.playListTracks.length}`);
-    this.state.playListTracks.map(track => console.log(JSON.stringify(track)));
-
+    // Create a list with uris from the play list tracks
     const trackURIs = this.state.playListTracks.map(savedTrack => savedTrack.uri);
-    console.log(`trackURIs${trackURIs}`);
 
-    //TODO: check if succes
-    Spotify.savePlaylist(this.state.playListName, trackURIs);
-    this.setState({playListName: '', playListTracks: [] });
-
+    // Save the play list
+    if(Spotify.savePlaylist(this.state.playListName, trackURIs)){
+      console.log('Play list saved.');
+      // TODO: this.setState({playListName: '', playListTracks: [] });
+    } else {
+      console.log('Play list not saved.');
+    }
   }
 
   render() {
