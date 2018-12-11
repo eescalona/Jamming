@@ -55,7 +55,7 @@ class App extends Component {
     // Save the play list
     if(Spotify.savePlaylist(this.state.playListName, trackURIs)){
       console.log('Play list saved.');
-      // TODO: this.setState({playListName: '', playListTracks: [] });
+      this.setState({playListName: '', playListTracks: [] });
     } else {
       console.log('Play list not saved.');
     }

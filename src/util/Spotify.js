@@ -16,26 +16,17 @@ const Spotify = {
         if(!window.location.href.match('access_token=([^&]*)')) {
           console.log(`accessToken get`);
           window.location.assign(`https://accounts.spotify.com/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&response_type=token&scope=playlist-modify-public`);
-          return '';
         } else {
-          //TODO: read accessToken from uri call back
           console.log(`accessToken read`);
-          accessToken = window.location.href.match('access_token=([^&]*)').toString();
-          expires_in = window.location.href.match('expires_in=([^&]*)').toString().substring(accessToken.indexOf('=')+1);
-          
-          accessToken = accessToken.substring(accessToken.indexOf('=')+1);
-          expires_in = expires_in.substring(accessToken.indexOf('=')+1);
-          
-          console.log(`accessToken: ${accessToken}`);
-          console.log(`expires_in: ${expires_in}`); 
-          window.history.pushState({},'Jamming','http://localhost:3000');
-            
-          // timer to clear access token 
-          setTimeout(() => {
-            console.log('I clean');
-            accessToken = '';
-            expires_in = '';
-          }, Number(expires_in)*100000000000);
+          const accessTokenMatch = window.location.href.match(/access_token=([^&]*)/);
+          const expiresInMatch = window.location.href.match(/expires_in=([^&]*)/);
+  
+          accessToken = accessTokenMatch[1];
+          const expiresIn = Number(expiresInMatch[1]);
+          Number(expiresInMatch[1]);
+
+          window.setTimeout(() => accessToken = '', expiresIn * 1000);
+          window.history.pushState('Access Token', 'Jammming', '/');
           return accessToken;
         }
       } else {
@@ -87,11 +78,12 @@ const Spotify = {
       fetch('https://api.spotify.com/v1/me', { headers: headers }).then(response => {
         return response.json();
       }).then(jsonResponse => {
-        
-        console.log('user id ' + JSON.stringify(jsonResponse));
         if (jsonResponse.id) {
           return userId = jsonResponse.id
         }
+      }).then(userId => {
+        this.createPlayList(userId, name, uris);
+        
       });
     } catch (error) {
       console.log('Spotify savePlaylist ' + error);
@@ -99,48 +91,50 @@ const Spotify = {
     }
   },
 
-  createPlayList(userId, name) {
+  createPlayList(userId, playListName, trackURIs) {
     try {
-    console.log(`createPlayList params: name: ${name}, userId: ${userId}`);
-    //TODO: post call
-    // const data = JSON.stringify({destination: urlToShorten});
-    // const response = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
-    //     method: 'POST',
-    //     body: data,
-    //     headers: {
-    //       'Content-type': 'application/json',
-    //       'apikey': apiKey
-    //     }
-    // });
-    // if(response.ok){
-    //     const jsonResponse = await response.json();
-    //     renderResponse(jsonResponse);
-    // }
-      return true;
+    console.log(`createPlayList params: name: ${playListName}, userId: ${userId}, uris: ${trackURIs}`);
+    fetch(`https://api.spotify.com/v1/users/${userId}/playlists`,{
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        method: 'POST',
+        body: JSON.stringify({name: playListName})
+      }).then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+      }).then(jsonResponse => {
+        if(jsonResponse.id) {
+          if(jsonResponse.id !== '') {
+            return this.addTracks(jsonResponse.id, trackURIs);
+          }
+        }
+      });
     } catch (error) {
       console.log('Spotify createPlayList ' + error);
       return '';
     }
   },
 
-  addTracks(playListId, uris) {
+  addTracks(playListId, trackURIs) {
     try {
-      console.log(`createPlayList params: playListId: ${playListId}, uris: ${uris}`);
-    //TODO: post call
-    // const data = JSON.stringify({destination: urlToShorten});
-    // const response = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
-    //     method: 'POST',
-    //     body: data,
-    //     headers: {
-    //       'Content-type': 'application/json',
-    //       'apikey': apiKey
-    //     }
-    // });
-    // if(response.ok){
-    //     const jsonResponse = await response.json();
-    //     renderResponse(jsonResponse);
-    // }
-      return true;
+      console.log(`addTracks params: playListId: ${playListId}, uris: ${trackURIs}`);
+      fetch(`https://api.spotify.com/v1/playlists/${playListId}/tracks`,{
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        method: 'POST',
+        body: JSON.stringify({uris: trackURIs})
+      }).then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+      }).then(jsonResponse => {
+          return true;
+      });
     } catch (error) {
       console.log('Spotify addTracks ' + error);
       return false;
@@ -148,7 +142,5 @@ const Spotify = {
   }
 
 };
-
-
 
 export default Spotify; 
